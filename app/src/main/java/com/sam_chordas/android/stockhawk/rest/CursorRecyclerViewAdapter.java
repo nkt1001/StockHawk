@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 
 /**
  * Created by sam_chordas on 10/6/15.
@@ -13,6 +14,7 @@ import android.support.v7.widget.RecyclerView;
  */
 public abstract class CursorRecyclerViewAdapter <VH extends RecyclerView.ViewHolder> extends RecyclerView.Adapter<VH>{
   private static final String LOG_TAG = CursorRecyclerViewAdapter.class.getSimpleName();
+  private static final String TAG = CursorRecyclerViewAdapter.class.getSimpleName();
   private Cursor mCursor;
   private boolean dataIsValid;
   private int rowIdColumn;
@@ -25,6 +27,27 @@ public abstract class CursorRecyclerViewAdapter <VH extends RecyclerView.ViewHol
     if (dataIsValid){
       mCursor.registerDataSetObserver(mDataSetObserver);
     }
+
+    String columns="";
+    String values="";
+
+    if (mCursor != null && mCursor.moveToFirst()) {
+
+      do {
+
+        for (String s : cursor.getColumnNames()){
+
+          columns = "";
+          columns += (s + "\r");
+
+          values += (cursor.getString(cursor.getColumnIndex(s)) + "\r");
+        }
+
+        values += "\n";
+      } while (cursor.moveToNext());
+    }
+
+    Log.d(TAG, columns + "\n" + values);
   }
 
   public Cursor getCursor(){

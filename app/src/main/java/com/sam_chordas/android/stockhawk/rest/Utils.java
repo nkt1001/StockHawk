@@ -2,23 +2,28 @@ package com.sam_chordas.android.stockhawk.rest;
 
 import android.content.ContentProviderOperation;
 import android.util.Log;
+
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
-import java.util.ArrayList;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 /**
  * Created by sam_chordas on 10/8/15.
  */
 public class Utils {
 
+  private static final String TAG = Utils.class.getSimpleName();
   private static String LOG_TAG = Utils.class.getSimpleName();
 
   public static boolean showPercent = true;
 
   public static ArrayList quoteJsonToContentVals(String JSON){
+    Log.d(TAG, "quoteJsonToContentVals: " + JSON);
     ArrayList<ContentProviderOperation> batchOperations = new ArrayList<>();
     JSONObject jsonObject = null;
     JSONArray resultsArray = null;
@@ -61,6 +66,7 @@ public class Utils {
       change = change.substring(0, change.length() - 1);
     }
     change = change.substring(1, change.length());
+    Log.d(TAG, "truncateChange: " + change);
     double round = (double) Math.round(Double.parseDouble(change) * 100) / 100;
     change = String.format("%.2f", round);
     StringBuffer changeBuffer = new StringBuffer(change);

@@ -26,6 +26,7 @@ import com.sam_chordas.android.stockhawk.touch_helper.ItemTouchHelperViewHolder;
 public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAdapter.ViewHolder>
     implements ItemTouchHelperAdapter{
 
+  private static final String TAG = QuoteCursorAdapter.class.getSimpleName();
   private static Context mContext;
   private static Typeface robotoLight;
   private boolean isPercent;
@@ -70,6 +71,8 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
     } else{
       viewHolder.change.setText(cursor.getString(cursor.getColumnIndex("change")));
     }
+
+
   }
 
   @Override public void onItemDismiss(int position) {
