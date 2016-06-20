@@ -20,4 +20,5 @@
     <string name="high">High:</string>
     <string name="low">Low:</string>
     <string name="add_new_quote">Add new quote</string>
+    <string name="search">search</string>
 </resources>

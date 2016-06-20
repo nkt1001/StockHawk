@@ -1,15 +1,20 @@
 package com.sam_chordas.android.stockhawk.ui;
 
-import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -36,15 +41,15 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
-public class StockHistoryActivity extends Activity implements View.OnClickListener, DatePickerDialog.OnDateSetListener {
+public class StockHistoryActivity extends AppCompatActivity implements DatePickerDialog.OnDateSetListener {
 
-    private static final String KEY_END_DATE = "KEY_END_DATE";
-    private static final String KEY_START_DATE = "KEY_START_DATE";
+    public static final String KEY_END_DATE = "KEY_END_DATE";
+    public static final String KEY_START_DATE = "KEY_START_DATE";
     public static final String EXTRA_SYMBOL = "EXTRA_SYMBOL";
     private static final String TAG = StockHistoryActivity.class.getSimpleName();
-    private Button btnStart;
-    private Button btnEnd;
-    private ImageButton btnSearch;
+//    private Button btnStart;
+//    private Button btnEnd;
+//    private ImageButton btnSearch;
     private RecyclerView recyclerHistory;
     private ProgressBar progressBar;
     private Calendar now;
@@ -55,37 +60,47 @@ public class StockHistoryActivity extends Activity implements View.OnClickListen
     private int mIdButton;
     private String start;
     private String end;
+    private FrameLayout searchContainer;
+    private SearchFragment searchFragment;
+    private boolean isShowing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stock_history);
 
-        btnStart = (Button) findViewById(R.id.buttonStart);
-        btnEnd = (Button) findViewById(R.id.buttonEnd);
+//        btnStart = (Button) findViewById(R.id.buttonStart);
+//        btnEnd = (Button) findViewById(R.id.buttonEnd);
         recyclerHistory = (RecyclerView) findViewById(R.id.recyclerHistory);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        btnSearch = (ImageButton) findViewById(R.id.buttonSearch);
-
-        btnEnd.setOnClickListener(this);
-        btnStart.setOnClickListener(this);
-        btnSearch.setOnClickListener(this);
+//        btnSearch = (ImageButton) findViewById(R.id.buttonSearch);
 
         now = Calendar.getInstance();
         simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        start = prefs.getString(KEY_START_DATE, getString(R.string.set_start_time));
-        end = prefs.getString(KEY_END_DATE, getString(R.string.set_end_time));
+        start = getStartDate();
+        end = getEndDate();
 
-        btnStart.setText(start);
-        btnSearch.setContentDescription(start);
-        btnEnd.setText(end);
-        btnEnd.setContentDescription(end);
+        searchContainer = (FrameLayout) findViewById(R.id.search_container);
+
+//        btnStart.setText(start);
+//        btnSearch.setContentDescription(start);
+//        btnEnd.setText(end);
+//        btnEnd.setContentDescription(end);
     }
 
-    @Override
-    public void onClick(View v) {
+    @NonNull
+    private String getEndDate() {
+        return prefs.getString(KEY_END_DATE, getString(R.string.set_end_time));
+    }
+
+    @NonNull
+    private String getStartDate() {
+        return prefs.getString(KEY_START_DATE, getString(R.string.set_start_time));
+    }
+
+    public void onButtonClicked(View v) {
 
         switch (v.getId()) {
             case R.id.buttonStart:
@@ -100,7 +115,37 @@ public class StockHistoryActivity extends Activity implements View.OnClickListen
                 turnOnProgress();
                 findStocks();
         }
+    }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.history_activity, menu);
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+        actionBar.setDisplayShowTitleEnabled(true);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (searchFragment == null) searchFragment = new SearchFragment();
+
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+
+        if (!isShowing) {
+            Log.d(TAG, "onOptionsItemSelected: empty");
+            isShowing = true;
+            fragmentTransaction.setCustomAnimations(R.anim.in_anim, R.anim.out_anim);
+            fragmentTransaction.replace(R.id.search_container, searchFragment).commit();
+        } else {
+            Log.d(TAG, "onOptionsItemSelected: not empty");
+            isShowing = false;
+            fragmentTransaction.setCustomAnimations(R.anim.out_anim, R.anim.in_anim);
+            fragmentTransaction.replace(R.id.search_container, searchFragment).commit();
+        }
+
+        Toast.makeText(StockHistoryActivity.this, "hello", Toast.LENGTH_SHORT).show();
+        return true;
     }
 
     private void showDateDialog(int id) {
@@ -108,14 +153,14 @@ public class StockHistoryActivity extends Activity implements View.OnClickListen
         Calendar calendar = Calendar.getInstance();
         if (id == R.id.buttonStart) {
             try {
-                calendar.setTime(simpleDateFormat.parse(start));
+                calendar.setTime(simpleDateFormat.parse(getStartDate()));
             } catch (ParseException e) {
                 e.printStackTrace();
                 calendar = now;
             }
         } else if (id == R.id.buttonEnd) {
             try {
-                calendar.setTime(simpleDateFormat.parse(end));
+                calendar.setTime(simpleDateFormat.parse(getEndDate()));
             } catch (ParseException e) {
                 e.printStackTrace();
                 calendar = now;
@@ -129,8 +174,8 @@ public class StockHistoryActivity extends Activity implements View.OnClickListen
 
     //    select * from yahoo.finance.historicaldata where symbol = "YHOO" and startDate = "20010-09-11" and endDate = "2010-03-10"
     private void findStocks() {
-        String start = btnStart.getText().toString();
-        String end = btnEnd.getText().toString();
+        String start = getStartDate();
+        String end = getEndDate();
         String symbol = getIntent().getStringExtra(EXTRA_SYMBOL);
 
         StringBuilder urlBuilder = new StringBuilder();
@@ -207,7 +252,8 @@ public class StockHistoryActivity extends Activity implements View.OnClickListen
 
         String chosenDate = simpleDateFormat.format(calendar.getTime());
 
-        ((Button)findViewById(mIdButton)).setText(chosenDate);
+        Button button = ((Button)findViewById(mIdButton));
+        if (button != null) button.setText(chosenDate);
 
         saveChoice(chosenDate);
     }
