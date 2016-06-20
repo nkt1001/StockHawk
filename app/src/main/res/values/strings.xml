@@ -15,4 +15,9 @@
     <string name="start">Start time:</string>
     <string name="end">End time:</string>
     <string name="go">GO</string>
+    <string name="open">Open:</string>
+    <string name="close">Close:</string>
+    <string name="high">High:</string>
+    <string name="low">Low:</string>
+    <string name="add_new_quote">Add new quote</string>
 </resources>

@@ -54,6 +54,7 @@ public class Utils {
   }
 
   public static String truncateBidPrice(String bidPrice){
+
     bidPrice = String.format("%.2f", Float.parseFloat(bidPrice));
     return bidPrice;
   }
@@ -93,7 +94,7 @@ public class Utils {
         builder.withValue(QuoteColumns.ISUP, 1);
       }
 
-    } catch (JSONException e){
+    } catch (JSONException e) {
       e.printStackTrace();
     }
     return builder.build();
