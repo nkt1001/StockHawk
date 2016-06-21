@@ -1,10 +1,11 @@
 package com.sam_chordas.android.stockhawk.ui;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -14,7 +15,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -47,9 +49,9 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
     public static final String KEY_START_DATE = "KEY_START_DATE";
     public static final String EXTRA_SYMBOL = "EXTRA_SYMBOL";
     private static final String TAG = StockHistoryActivity.class.getSimpleName();
-//    private Button btnStart;
-//    private Button btnEnd;
-//    private ImageButton btnSearch;
+    private Button btnStart;
+    private Button btnEnd;
+    private ImageButton btnSearch;
     private RecyclerView recyclerHistory;
     private ProgressBar progressBar;
     private Calendar now;
@@ -60,20 +62,20 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
     private int mIdButton;
     private String start;
     private String end;
-    private FrameLayout searchContainer;
-    private SearchFragment searchFragment;
-    private boolean isShowing;
+    private LinearLayout searchBar;
+    private boolean isShowing=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stock_history);
 
-//        btnStart = (Button) findViewById(R.id.buttonStart);
-//        btnEnd = (Button) findViewById(R.id.buttonEnd);
+        btnStart = (Button) findViewById(R.id.buttonStart);
+        btnEnd = (Button) findViewById(R.id.buttonEnd);
         recyclerHistory = (RecyclerView) findViewById(R.id.recyclerHistory);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
-//        btnSearch = (ImageButton) findViewById(R.id.buttonSearch);
+        btnSearch = (ImageButton) findViewById(R.id.buttonSearch);
+        searchBar = (LinearLayout) findViewById(R.id.search_bar);
 
         now = Calendar.getInstance();
         simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -82,12 +84,18 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
         start = getStartDate();
         end = getEndDate();
 
-        searchContainer = (FrameLayout) findViewById(R.id.search_container);
 
-//        btnStart.setText(start);
-//        btnSearch.setContentDescription(start);
-//        btnEnd.setText(end);
-//        btnEnd.setContentDescription(end);
+        btnStart.setText(start);
+        btnSearch.setContentDescription(start);
+        btnEnd.setText(end);
+        btnEnd.setContentDescription(end);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+//        getSupportFragmentManager().beginTransaction().add(R.id.search_container, searchFragment).commit();
     }
 
     @NonNull
@@ -128,22 +136,58 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (searchFragment == null) searchFragment = new SearchFragment();
 
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
 
-        if (!isShowing) {
-            Log.d(TAG, "onOptionsItemSelected: empty");
+        if (searchBar.getVisibility() == View.GONE) {
+//        if (!isShowing) {
+            Log.d(TAG, "onOptionsItemSelected: gone");
+
             isShowing = true;
-            fragmentTransaction.setCustomAnimations(R.anim.in_anim, R.anim.out_anim);
-            fragmentTransaction.replace(R.id.search_container, searchFragment).commit();
-        } else {
-            Log.d(TAG, "onOptionsItemSelected: not empty");
-            isShowing = false;
-            fragmentTransaction.setCustomAnimations(R.anim.out_anim, R.anim.in_anim);
-            fragmentTransaction.replace(R.id.search_container, searchFragment).commit();
-        }
 
+            searchBar.setVisibility(View.VISIBLE);
+            searchBar.setAlpha(0.0f);
+
+            searchBar.animate()
+                    .setDuration(300)
+                    .translationY(0.0f)
+                    .alpha(1.0f).setListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+                    Log.d(TAG, "onAnimationStart: ");
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    Log.d(TAG, "onAnimationEnd: ");
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+                    Log.d(TAG, "onAnimationCancel: ");
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+                    Log.d(TAG, "onAnimationRepeat: ");
+                }
+            });
+        } else {
+            Log.d(TAG, "onOptionsItemSelected: visible");
+
+            isShowing = false;
+
+            searchBar.animate()
+                    .setDuration(300)
+                    .translationY(-searchBar.getHeight())
+                    .alpha(0.0f)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            super.onAnimationEnd(animation);
+                            searchBar.setVisibility(View.GONE);
+                        }
+                    });
+        }
         Toast.makeText(StockHistoryActivity.this, "hello", Toast.LENGTH_SHORT).show();
         return true;
     }
