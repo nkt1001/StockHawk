@@ -6,6 +6,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -63,7 +65,13 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
     private String start;
     private String end;
     private LinearLayout searchBar;
-    private boolean isShowing=false;
+
+    private ViewPager mPager;
+
+    /**
+     * The pager adapter, which provides the pages to the view pager widget.
+     */
+    private PagerAdapter mPagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +80,7 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
 
         btnStart = (Button) findViewById(R.id.buttonStart);
         btnEnd = (Button) findViewById(R.id.buttonEnd);
-        recyclerHistory = (RecyclerView) findViewById(R.id.recyclerHistory);
+//        recyclerHistory = (RecyclerView) findViewById(R.id.recyclerHistory);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         btnSearch = (ImageButton) findViewById(R.id.buttonSearch);
         searchBar = (LinearLayout) findViewById(R.id.search_bar);
@@ -142,8 +150,6 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
 //        if (!isShowing) {
             Log.d(TAG, "onOptionsItemSelected: gone");
 
-            isShowing = true;
-
             searchBar.setVisibility(View.VISIBLE);
             searchBar.setAlpha(0.0f);
 
@@ -173,8 +179,6 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
             });
         } else {
             Log.d(TAG, "onOptionsItemSelected: visible");
-
-            isShowing = false;
 
             searchBar.animate()
                     .setDuration(300)

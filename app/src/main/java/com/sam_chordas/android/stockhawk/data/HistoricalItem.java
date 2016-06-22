@@ -1,12 +1,15 @@
 package com.sam_chordas.android.stockhawk.data;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 /**
  * Created by Nkt1001 on 20.06.2016.
  */
-public class HistoricalItem {
+public class HistoricalItem implements Parcelable {
     @SerializedName("Symbol")
     @Expose
     private String symbol;
@@ -31,6 +34,29 @@ public class HistoricalItem {
     @SerializedName("Adj_Close")
     @Expose
     private String adjClose;
+
+    protected HistoricalItem(Parcel in) {
+        symbol = in.readString();
+        date = in.readString();
+        open = in.readString();
+        high = in.readString();
+        low = in.readString();
+        close = in.readString();
+        volume = in.readString();
+        adjClose = in.readString();
+    }
+
+    public static final Creator<HistoricalItem> CREATOR = new Creator<HistoricalItem>() {
+        @Override
+        public HistoricalItem createFromParcel(Parcel in) {
+            return new HistoricalItem(in);
+        }
+
+        @Override
+        public HistoricalItem[] newArray(int size) {
+            return new HistoricalItem[size];
+        }
+    };
 
     /**
      *
@@ -176,5 +202,21 @@ public class HistoricalItem {
         this.adjClose = adjClose;
     }
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(symbol);
+        dest.writeString(date);
+        dest.writeString(open);
+        dest.writeString(high);
+        dest.writeString(low);
+        dest.writeString(close);
+        dest.writeString(volume);
+        dest.writeString(adjClose);
+    }
 }
 
