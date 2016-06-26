@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.HistoricalItem;
+import com.sam_chordas.android.stockhawk.rest.DividerItemDecoration;
 import com.sam_chordas.android.stockhawk.rest.HistoryRecyclerAdapter;
 
 public class HistoricalListFragment extends Fragment {
@@ -49,6 +50,7 @@ public class HistoricalListFragment extends Fragment {
             RecyclerView recyclerView = (RecyclerView) view;
             recyclerView.setLayoutManager(new LinearLayoutManager(context));
             recyclerView.setAdapter(new HistoryRecyclerAdapter(getActivity(), mItems));
+            recyclerView.addItemDecoration(new DividerItemDecoration(getActivity()));
         }
         return view;
     }

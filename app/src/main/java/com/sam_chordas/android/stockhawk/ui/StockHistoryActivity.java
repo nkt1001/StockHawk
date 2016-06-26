@@ -6,11 +6,13 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
@@ -25,8 +27,6 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.HistoricalItem;
-import com.sam_chordas.android.stockhawk.rest.DividerItemDecoration;
-import com.sam_chordas.android.stockhawk.rest.HistoryRecyclerAdapter;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -65,7 +65,6 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
     private String start;
     private String end;
     private LinearLayout searchBar;
-
     private ViewPager mPager;
 
     /**
@@ -84,6 +83,7 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         btnSearch = (ImageButton) findViewById(R.id.buttonSearch);
         searchBar = (LinearLayout) findViewById(R.id.search_bar);
+        mPager = (ViewPager) findViewById(R.id.pager);
 
         now = Calendar.getInstance();
         simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -91,7 +91,6 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         start = getStartDate();
         end = getEndDate();
-
 
         btnStart.setText(start);
         btnSearch.setContentDescription(start);
@@ -262,13 +261,12 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
     }
 
     private void showData(String response) {
-        Log.d(TAG, "showData: " + response);
 
         try {
             JSONArray bids = new JSONObject(response).getJSONObject("query").getJSONObject("results").getJSONArray("quote");
             HistoricalItem[] results = new Gson().fromJson(bids.toString(), HistoricalItem[].class);
 
-            initRecycler(results);
+            initPager(results);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -277,20 +275,33 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
         turnOffProgress();
     }
 
-    private void initRecycler(final HistoricalItem[] results) {
+    private void initPager(final HistoricalItem[] results) {
+//        runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+//                recyclerHistory.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+//                recyclerHistory.setAdapter(new HistoryRecyclerAdapter(getApplicationContext(), results));
+//                recyclerHistory.addItemDecoration(new DividerItemDecoration(getApplicationContext()));
+//
+//            }
+//        });
+
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                recyclerHistory.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-                recyclerHistory.setAdapter(new HistoryRecyclerAdapter(getApplicationContext(), results));
-                recyclerHistory.addItemDecoration(new DividerItemDecoration(getApplicationContext()));
+                mPager.setAdapter(new ScreenSlidePagerAdapter(getSupportFragmentManager(), results));
 
             }
         });
     }
 
     private void showToast() {
-        Toast.makeText(StockHistoryActivity.this, "Error(((", Toast.LENGTH_SHORT).show();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(StockHistoryActivity.this, "Error(((", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -330,6 +341,30 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
                 progressBar.setVisibility(View.GONE);
             }
         });
+    }
 
+    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
+
+        private HistoricalItem[] mItems;
+
+        private static final int NUM_PAGES = 2;
+
+        public ScreenSlidePagerAdapter(FragmentManager fm, HistoricalItem[] items) {
+            super(fm);
+
+            mItems = items;
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            if (position == 0) return HistoricalListFragment.newInstance(mItems);
+
+            return LineGraphFragment.newInstance(mItems);
+        }
+
+        @Override
+        public int getCount() {
+            return NUM_PAGES;
+        }
     }
 }
