@@ -51,6 +51,7 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
     public static final String KEY_START_DATE = "KEY_START_DATE";
     public static final String EXTRA_SYMBOL = "EXTRA_SYMBOL";
     private static final String TAG = StockHistoryActivity.class.getSimpleName();
+    private static final String STATE_SAVE = "STATE_SAVE";
     private Button btnStart;
     private Button btnEnd;
     private ImageButton btnSearch;
@@ -71,6 +72,7 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
      * The pager adapter, which provides the pages to the view pager widget.
      */
     private PagerAdapter mPagerAdapter;
+    private HistoricalItem[] mHistoryItems;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,13 +98,18 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
         btnSearch.setContentDescription(start);
         btnEnd.setText(end);
         btnEnd.setContentDescription(end);
+
+        if (savedInstanceState != null) initPager((HistoricalItem[]) savedInstanceState.getParcelableArray(STATE_SAVE));
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
 
-//        getSupportFragmentManager().beginTransaction().add(R.id.search_container, searchFragment).commit();
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+
+        if (mHistoryItems != null) {
+            outState.putParcelableArray(STATE_SAVE, mHistoryItems);
+        }
+        super.onSaveInstanceState(outState);
     }
 
     @NonNull
@@ -264,9 +271,9 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
 
         try {
             JSONArray bids = new JSONObject(response).getJSONObject("query").getJSONObject("results").getJSONArray("quote");
-            HistoricalItem[] results = new Gson().fromJson(bids.toString(), HistoricalItem[].class);
+            mHistoryItems = new Gson().fromJson(bids.toString(), HistoricalItem[].class);
 
-            initPager(results);
+            initPager(mHistoryItems);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -357,9 +364,9 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
 
         @Override
         public Fragment getItem(int position) {
-            if (position == 0) return HistoricalListFragment.newInstance(mItems);
+            if (position == 0) return LineGraphFragment.newInstance(mItems);
 
-            return LineGraphFragment.newInstance(mItems);
+            return HistoricalListFragment.newInstance(mItems);
         }
 
         @Override

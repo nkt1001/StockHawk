@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+
 import com.google.android.gms.gcm.TaskParams;
 
 /**
@@ -11,6 +12,7 @@ import com.google.android.gms.gcm.TaskParams;
  */
 public class StockIntentService extends IntentService {
 
+  private StockTaskService.ServiceErrorCallback mErrorCallback;
   public StockIntentService(){
     super(StockIntentService.class.getName());
   }

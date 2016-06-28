@@ -1,9 +1,11 @@
 package com.sam_chordas.android.stockhawk.ui;
 
 import android.app.LoaderManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
@@ -37,6 +39,7 @@ import com.sam_chordas.android.stockhawk.service.StockTaskService;
 import com.sam_chordas.android.stockhawk.touch_helper.SimpleItemTouchHelperCallback;
 
 public class MyStocksActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
+  public static final String ACTION_RECEIVE_ERROR = "ACTION_RECEIVE_ERROR";
 
   /**
    * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -53,6 +56,12 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   private Context mContext;
   private Cursor mCursor;
   boolean isConnected;
+  BroadcastReceiver errorReceiver = new BroadcastReceiver() {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+      showErrorDialog();
+    }
+  };
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +77,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     // The intent service is for executing immediate pulls from the Yahoo API
     // GCMTaskService can only schedule tasks, they cannot execute immediately
     mServiceIntent = new Intent(this, StockIntentService.class);
+
     if (savedInstanceState == null){
       // Run the initialize task service so that some stocks appear upon an empty database
       mServiceIntent.putExtra("tag", "init");
@@ -156,11 +166,22 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     }
   }
 
+  @Override
+  protected void onStart() {
+    super.onStart();
+    registerReceiver(errorReceiver, new IntentFilter(ACTION_RECEIVE_ERROR));
+  }
 
   @Override
   public void onResume() {
     super.onResume();
     getLoaderManager().restartLoader(CURSOR_LOADER_ID, null, this);
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    unregisterReceiver(errorReceiver);
   }
 
   public void networkToast(){
@@ -172,6 +193,12 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
     actionBar.setDisplayShowTitleEnabled(true);
     actionBar.setTitle(mTitle);
+  }
+
+  private void showErrorDialog() {
+    new MaterialDialog.Builder(mContext).title(R.string.symbol_search)
+            .content(R.string.content_error)
+            .show();
   }
 
   @Override

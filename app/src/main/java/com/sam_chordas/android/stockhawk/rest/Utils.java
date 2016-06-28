@@ -35,14 +35,14 @@ public class Utils {
         if (count == 1){
           jsonObject = jsonObject.getJSONObject("results")
               .getJSONObject("quote");
-          batchOperations.add(buildBatchOperation(jsonObject));
+            if (checkJsonObject(jsonObject)) batchOperations.add(buildBatchOperation(jsonObject));
         } else{
           resultsArray = jsonObject.getJSONObject("results").getJSONArray("quote");
 
           if (resultsArray != null && resultsArray.length() != 0){
             for (int i = 0; i < resultsArray.length(); i++){
               jsonObject = resultsArray.getJSONObject(i);
-              batchOperations.add(buildBatchOperation(jsonObject));
+              if (checkJsonObject(jsonObject)) batchOperations.add(buildBatchOperation(jsonObject));
             }
           }
         }
@@ -56,6 +56,7 @@ public class Utils {
   public static String truncateBidPrice(String bidPrice){
 
     bidPrice = String.format("%.2f", Float.parseFloat(bidPrice));
+
     return bidPrice;
   }
 
@@ -68,6 +69,7 @@ public class Utils {
     }
     change = change.substring(1, change.length());
     Log.d(TAG, "truncateChange: " + change);
+
     double round = (double) Math.round(Double.parseDouble(change) * 100) / 100;
     change = String.format("%.2f", round);
     StringBuffer changeBuffer = new StringBuffer(change);
@@ -78,6 +80,7 @@ public class Utils {
   }
 
   public static ContentProviderOperation buildBatchOperation(JSONObject jsonObject){
+
     ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(
         QuoteProvider.Quotes.CONTENT_URI);
     try {
@@ -98,5 +101,18 @@ public class Utils {
       e.printStackTrace();
     }
     return builder.build();
+  }
+
+  private static boolean checkJsonObject(JSONObject jsonObject) {
+      boolean checkResult=false;
+      try {
+          checkResult = !jsonObject.getString("Change").equals("null") && !jsonObject.getString("Bid").equals("null")
+                                    && !jsonObject.getString("ChangeinPercent").equals("null");
+      } catch (JSONException e) {
+          e.printStackTrace();
+      }
+
+      Log.d(TAG, "checkJsonObject: " + checkResult);
+      return checkResult;
   }
 }
