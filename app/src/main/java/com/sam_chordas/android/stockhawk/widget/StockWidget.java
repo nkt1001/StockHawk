@@ -7,16 +7,16 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
-import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -28,21 +28,10 @@ public class StockWidget extends AppWidgetProvider {
 
     public static final String EXTRA_STOCKS = "EXTRA_STOCKS";
     private StringBuilder mStoredSymbols = new StringBuilder();
-    private OkHttpClient client=new OkHttpClient();
 
     private RemoteViews updateWidgetListView(Context context,
-                                             int appWidgetId) {
+                                             int appWidgetId, String data) {
 
-
-
-//        String url = buildUrl(context);
-//
-//        String data = null;
-//        try {
-//            data = fetchData(context, url);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
 
         //which layout to show on widget
         RemoteViews remoteViews = new RemoteViews(
@@ -57,11 +46,13 @@ public class StockWidget extends AppWidgetProvider {
         svcIntent.setData(Uri.parse(
                 svcIntent.toUri(Intent.URI_INTENT_SCHEME)));
 
-        svcIntent.putExtra(EXTRA_STOCKS, "");
+        svcIntent.putExtra(EXTRA_STOCKS, data);
 
         //setting adapter to listview of the widget
-        remoteViews.setRemoteAdapter(appWidgetId, R.id.listViewWidget,
-                svcIntent);
+//        remoteViews.setRemoteAdapter(appWidgetId, R.id.listViewWidget,
+//                svcIntent);
+
+        remoteViews.setRemoteAdapter(R.id.listViewWidget, svcIntent);
         //setting an empty view in case of no data
         remoteViews.setEmptyView(R.id.listViewWidget, R.id.empty_view);
         return remoteViews;
@@ -70,6 +61,7 @@ public class StockWidget extends AppWidgetProvider {
     }
 
     private String buildUrl(Context context) {
+        Log.d(TAG, "buildUrl: ");
         StringBuilder urlStringBuilder = new StringBuilder();
         try{
             // Base URL for the Yahoo query
@@ -114,35 +106,76 @@ public class StockWidget extends AppWidgetProvider {
         return urlStringBuilder.toString();
     }
 
-    void fetchData(final Context context, String url) throws IOException {
-        Request request = new Request.Builder()
-                .url(url)
-                .build();
+    void fetchData(final Context context, final AppWidgetManager appWidgetManager, final String url, final int[] args) throws IOException {
+        final OkHttpClient client = new OkHttpClient();
+        Log.d(TAG, "fetchData: ");
+        HandlerThread handlerThread = new HandlerThread(TAG);
+        handlerThread.start();
+        final Handler handler = new Handler(handlerThread.getLooper());
 
-        client.newCall(request).enqueue(new Callback() {
+        handler.post(new Runnable() {
             @Override
-            public void onFailure(Request request, IOException e) {
+            public void run() {
+                Request request = new Request.Builder()
+                        .url(url)
+                        .build();
+                try {
+                    String data = client.newCall(request).execute().body().string();
+                    final int N = args.length;
 
-            }
+                    for (int i = 0; i < N; ++i) {
 
-            @Override
-            public void onResponse(Response response) throws IOException {
+                        RemoteViews remoteViews = updateWidgetListView(context, args[i], data);
 
+                        appWidgetManager.updateAppWidget(args[i],
+                            remoteViews);
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
+
+
+//        Request request = new Request.Builder()
+//                .url(url)
+//                .build();
+//
+//        client.newCall(request).enqueue(new Callback() {
+//            @Override
+//            public void onFailure(Request request, IOException e) {
+//                Toast.makeText(context, "Internet connection error", Toast.LENGTH_SHORT).show();
+//            }
+//
+//            @Override
+//            public void onResponse(Response response) throws IOException {
+//                Log.d(TAG, "onResponse: ");
+//                final int N = args.length;
+//
+//                for (int i = 0; i < N; ++i) {
+//
+//                    RemoteViews remoteViews = updateWidgetListView(context,
+//                            args[i], response.body().string());
+//
+//                    appWidgetManager.updateAppWidget(args[i],
+//                            remoteViews);
+//                }
+//            }
+//        });
     }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        Log.d(TAG, "onUpdate: ");
         // There may be multiple widgets active, so update all of them
-        final int N = appWidgetIds.length;
-        Log.d(TAG, "onUpdate: " + N);
-        for (int i = 0; i < N; ++i) {
-            RemoteViews remoteViews = updateWidgetListView(context,
-                    appWidgetIds[i]);
-            appWidgetManager.updateAppWidget(appWidgetIds[i],
-                    remoteViews);
+        String url = buildUrl(context);
+        try {
+            fetchData(context, appWidgetManager, url, appWidgetIds);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
     }
 
     @Override

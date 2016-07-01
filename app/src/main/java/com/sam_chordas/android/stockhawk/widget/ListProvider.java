@@ -27,17 +27,18 @@ public class ListProvider implements RemoteViewsService.RemoteViewsFactory {
 
     @Override
     public void onCreate() {
+        Log.d(TAG, "onCreate: ");
 
     }
 
     @Override
     public void onDataSetChanged() {
-
+        Log.d(TAG, "onDataSetChanged: ");
     }
 
     @Override
     public void onDestroy() {
-
+        Log.d(TAG, "onDestroy: ");
     }
 
     @Override
@@ -55,11 +56,6 @@ public class ListProvider implements RemoteViewsService.RemoteViewsFactory {
         return false;
     }
 
-    /*
-    *Similar to getView of Adapter where instead of View
-    *we return RemoteViews
-    *
-    */
     @Override
     public RemoteViews getViewAt(int position) {
         Log.d(TAG, "getViewAt() called with: " + "position = [" + position + "]");
@@ -69,8 +65,12 @@ public class ListProvider implements RemoteViewsService.RemoteViewsFactory {
         ListItem listItem = mData[position];
 
         remoteView.setTextViewText(R.id.stock_symbol, listItem.getSymbol());
-        remoteView.setTextViewText(R.id.bid_price, listItem.getBid());
-        remoteView.setTextViewText(R.id.textViewChange, listItem.getChange());
+
+        float bid = Float.parseFloat(listItem.getBid());
+        remoteView.setTextViewText(R.id.bid_price, String.format("%.2f", bid));
+
+        float change = Float.parseFloat(listItem.getChange());
+        remoteView.setTextViewText(R.id.textViewChange, String.format("%.2f", change));
 
         int color = listItem.getChangeinPercent().contains("+") ? R.color.material_green_700 : R.color.material_red_700;
         remoteView.setTextColor(R.id.textViewChange, ContextCompat.getColor(context, color));
@@ -80,6 +80,7 @@ public class ListProvider implements RemoteViewsService.RemoteViewsFactory {
 
     @Override
     public RemoteViews getLoadingView() {
+        Log.d(TAG, "getLoadingView: ");
         return null;
     }
 

@@ -1,7 +1,9 @@
 package com.sam_chordas.android.stockhawk.ui;
 
 import android.app.LoaderManager;
+import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
@@ -17,6 +19,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -37,9 +40,11 @@ import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.service.StockIntentService;
 import com.sam_chordas.android.stockhawk.service.StockTaskService;
 import com.sam_chordas.android.stockhawk.touch_helper.SimpleItemTouchHelperCallback;
+import com.sam_chordas.android.stockhawk.widget.StockWidget;
 
 public class MyStocksActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
   public static final String ACTION_RECEIVE_ERROR = "ACTION_RECEIVE_ERROR";
+  private static final String TAG = MyStocksActivity.class.getSimpleName();
 
   /**
    * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -182,6 +187,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   protected void onStop() {
     super.onStop();
     unregisterReceiver(errorReceiver);
+    updateWidget();
   }
 
   public void networkToast(){
@@ -227,6 +233,15 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     }
 
     return super.onOptionsItemSelected(item);
+  }
+
+  private void updateWidget() {
+    Log.d(TAG, "updateWidget: ");
+    Intent intent = new Intent(this, StockWidget.class);
+    intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+    int[] ids = AppWidgetManager.getInstance(getApplication()).getAppWidgetIds(new ComponentName(getApplication(), StockWidget.class));
+    intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
+    sendBroadcast(intent);
   }
 
   @Override
