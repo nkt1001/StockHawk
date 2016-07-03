@@ -7,16 +7,17 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.util.Log;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
+import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -108,61 +109,32 @@ public class StockWidget extends AppWidgetProvider {
 
     void fetchData(final Context context, final AppWidgetManager appWidgetManager, final String url, final int[] args) throws IOException {
         final OkHttpClient client = new OkHttpClient();
-        Log.d(TAG, "fetchData: ");
-        HandlerThread handlerThread = new HandlerThread(TAG);
-        handlerThread.start();
-        final Handler handler = new Handler(handlerThread.getLooper());
 
-        handler.post(new Runnable() {
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
             @Override
-            public void run() {
-                Request request = new Request.Builder()
-                        .url(url)
-                        .build();
-                try {
-                    String data = client.newCall(request).execute().body().string();
-                    final int N = args.length;
+            public void onFailure(Request request, IOException e) {
+                Toast.makeText(context, "Internet connection error", Toast.LENGTH_SHORT).show();
+            }
 
-                    for (int i = 0; i < N; ++i) {
+            @Override
+            public void onResponse(Response response) throws IOException {
+                Log.d(TAG, "onResponse: ");
+                final int N = args.length;
 
-                        RemoteViews remoteViews = updateWidgetListView(context, args[i], data);
+                for (int i = 0; i < N; ++i) {
 
-                        appWidgetManager.updateAppWidget(args[i],
+                    RemoteViews remoteViews = updateWidgetListView(context,
+                            args[i], response.body().string());
+
+                    appWidgetManager.updateAppWidget(args[i],
                             remoteViews);
-                    }
-
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
             }
         });
-
-
-//        Request request = new Request.Builder()
-//                .url(url)
-//                .build();
-//
-//        client.newCall(request).enqueue(new Callback() {
-//            @Override
-//            public void onFailure(Request request, IOException e) {
-//                Toast.makeText(context, "Internet connection error", Toast.LENGTH_SHORT).show();
-//            }
-//
-//            @Override
-//            public void onResponse(Response response) throws IOException {
-//                Log.d(TAG, "onResponse: ");
-//                final int N = args.length;
-//
-//                for (int i = 0; i < N; ++i) {
-//
-//                    RemoteViews remoteViews = updateWidgetListView(context,
-//                            args[i], response.body().string());
-//
-//                    appWidgetManager.updateAppWidget(args[i],
-//                            remoteViews);
-//                }
-//            }
-//        });
     }
 
     @Override

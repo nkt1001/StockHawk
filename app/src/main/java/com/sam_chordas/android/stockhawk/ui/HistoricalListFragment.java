@@ -49,7 +49,8 @@ public class HistoricalListFragment extends Fragment {
             Context context = view.getContext();
             RecyclerView recyclerView = (RecyclerView) view;
             recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            recyclerView.setAdapter(new HistoryRecyclerAdapter(getActivity(), mItems));
+            recyclerView.setAdapter(new HistoryRecyclerAdapter(getActivity(), mItems,
+                    ((StockHistoryActivity)getActivity()).getSimpleDateFormat(), ((StockHistoryActivity)getActivity()).getDefaultFormat()));
             recyclerView.addItemDecoration(new DividerItemDecoration(getActivity()));
         }
         return view;

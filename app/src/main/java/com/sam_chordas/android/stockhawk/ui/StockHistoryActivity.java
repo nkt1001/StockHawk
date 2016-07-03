@@ -59,7 +59,6 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
     private ProgressBar progressBar;
     private Calendar now;
     private OkHttpClient client = new OkHttpClient();
-    private SimpleDateFormat simpleDateFormat;
     private final String urlTemplate = "select * from yahoo.finance.historicaldata where symbol = \"%s\" and startDate = \"%s\" and endDate = \"%s\"";
     private SharedPreferences prefs;
     private int mIdButton;
@@ -67,6 +66,9 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
     private String end;
     private LinearLayout searchBar;
     private ViewPager mPager;
+
+    private SimpleDateFormat simpleDateFormat;
+    private SimpleDateFormat defaultFormat;
 
     /**
      * The pager adapter, which provides the pages to the view pager widget.
@@ -89,6 +91,7 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
 
         now = Calendar.getInstance();
         simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        defaultFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         start = getStartDate();
@@ -228,8 +231,18 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
 
     //    select * from yahoo.finance.historicaldata where symbol = "YHOO" and startDate = "20010-09-11" and endDate = "2010-03-10"
     private void findStocks() {
-        String start = getStartDate();
-        String end = getEndDate();
+        Log.d(TAG, "findStocks: ");
+        String start = null;
+        String end = null;
+        try {
+            start = defaultFormat.format(simpleDateFormat.parse(getStartDate()));
+            end = defaultFormat.format(simpleDateFormat.parse(getEndDate()));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        Log.d(TAG, "findStocks: " + start + "-" + end);
+
         String symbol = getIntent().getStringExtra(EXTRA_SYMBOL);
 
         StringBuilder urlBuilder = new StringBuilder();
@@ -250,6 +263,8 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
     }
 
     private void execute(String url) throws IOException {
+        Log.d(TAG, "execute: " + url);
+
         Request request = new Request.Builder()
                 .url(url)
                 .build();
@@ -270,8 +285,14 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
     private void showData(String response) {
 
         try {
-            JSONArray bids = new JSONObject(response).getJSONObject("query").getJSONObject("results").getJSONArray("quote");
-            mHistoryItems = new Gson().fromJson(bids.toString(), HistoricalItem[].class);
+            JSONArray bids = new JSONObject(response).getJSONObject("query").getJSONObject("results").optJSONArray("quote");
+
+            if (bids == null) {
+                JSONObject bid = new JSONObject(response).getJSONObject("query").getJSONObject("results").getJSONObject("quote");
+                mHistoryItems = new HistoricalItem[] {new Gson().fromJson(bid.toString(), HistoricalItem.class)};
+            } else {
+                mHistoryItems = new Gson().fromJson(bids.toString(), HistoricalItem[].class);
+            }
 
             initPager(mHistoryItems);
 
@@ -322,6 +343,14 @@ public class StockHistoryActivity extends AppCompatActivity implements DatePicke
         if (button != null) button.setText(chosenDate);
 
         saveChoice(chosenDate);
+    }
+
+    public SimpleDateFormat getSimpleDateFormat() {
+        return simpleDateFormat;
+    }
+
+    public SimpleDateFormat getDefaultFormat() {
+        return defaultFormat;
     }
 
     private void saveChoice(String chosenDate) {

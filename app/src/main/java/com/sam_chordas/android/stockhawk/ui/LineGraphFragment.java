@@ -17,9 +17,12 @@ import com.db.chart.view.LineChartView;
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.HistoricalItem;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 
 public class LineGraphFragment extends Fragment {
@@ -50,6 +53,7 @@ public class LineGraphFragment extends Fragment {
     private ArrayList<Float[]> mFloatDataArray;
     private int[] mBorderValues;
     private String[] mLabels;
+    private SimpleDateFormat mSDF = new SimpleDateFormat("yy-M-d", Locale.getDefault());
 
     public LineGraphFragment() {
         // Required empty public constructor
@@ -196,11 +200,21 @@ public class LineGraphFragment extends Fragment {
         for (int i = 0; i < mItems.length; i++) {
             HistoricalItem item = mItems[mItems.length-i-1];
 
-            mLabels[i] = item.getDate();
+            try {
+                mLabels[i] = ((StockHistoryActivity)getActivity()).getSimpleDateFormat()
+                        .format(((StockHistoryActivity)getActivity()).getDefaultFormat().parse(item.getDate()));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
 
             label = "";
             if (showingLabelIndex == null || showingLabelIndex.contains(i)) {
-                label = mLabels[i];
+                try {
+                    label = mSDF.format(((StockHistoryActivity)getActivity()).getSimpleDateFormat().parse(mLabels[i]));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                Log.d(TAG, "initChartValue: " + label);
             }
 
             for (ChartType type : ChartType.values()) {
@@ -234,6 +248,7 @@ public class LineGraphFragment extends Fragment {
     }
 
     private ArrayList<Integer> calcIndexList(int arrayLength) {
+        Log.d(TAG, "calcIndexList: " + arrayLength);
 
         //no need to calculate list
         if (arrayLength <= 5) return null;
@@ -243,19 +258,16 @@ public class LineGraphFragment extends Fragment {
 
         int maxLabelNum = isEven ? 4 : 5;
 
-        int div = arrayLength / maxLabelNum;
+        int div = Math.round((float)(arrayLength)/maxLabelNum);
 
-        //2 is minimal step
-        if (div == 1) div = 2;
+        int index = 0;
 
-        int index = isEven ? 1 : 0;
-        list.add(index);
-
-        while (index < arrayLength-1) {
+        while (index < arrayLength) {
             index += div;
             list.add(index);
         }
 
+        Log.d(TAG, "calcIndexList: " + list);
 
         return list;
     }

@@ -15,6 +15,10 @@ import android.widget.TextView;
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.HistoricalItem;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+
 /**
  * Created by Nkt1001 on 20.06.2016.
  */
@@ -23,10 +27,15 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
     private static final String TAG = HistoryRecyclerAdapter.class.getSimpleName();
     private final HistoricalItem[] mItems;
     private final Context mContext;
+    private final String template = "%.2f";
+    private final SimpleDateFormat dateFormat;
+    private final SimpleDateFormat defFormat;
 
-    public HistoryRecyclerAdapter(Context context, HistoricalItem[] items) {
+    public HistoryRecyclerAdapter(Context context, HistoricalItem[] items, SimpleDateFormat format, SimpleDateFormat defaultFormat) {
         this.mItems = items;
         this.mContext = context;
+        this.dateFormat = format;
+        this.defFormat = defaultFormat;
     }
 
 
@@ -41,10 +50,15 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
         HistoricalItem historicalItem = mItems[position];
 
         holder.mSymbol.setText(historicalItem.getSymbol());
-        holder.mDate.setText(historicalItem.getDate());
+        try {
+            holder.mDate.setText(dateFormat.format(defFormat.parse(historicalItem.getDate())));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
 
-        String open = holder.mView.getContext().getString(R.string.open) + " " + historicalItem.getOpen();
-        String close = holder.mView.getContext().getString(R.string.close) + " " + historicalItem.getClose();
+
+        String open = holder.mView.getContext().getString(R.string.open) + " " + String.format(Locale.getDefault(), template, Float.parseFloat(historicalItem.getOpen()));
+        String close = holder.mView.getContext().getString(R.string.close) + " " + String.format(Locale.getDefault(), template, Float.parseFloat(historicalItem.getClose()));
 
         holder.mOpen.setText(setSpan(open));
         holder.mOpen.setContentDescription(open);
@@ -52,8 +66,8 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
         holder.mClose.setText(setSpan(close));
         holder.mClose.setContentDescription(close);
 
-        String high = holder.mView.getContext().getString(R.string.high) + " " + historicalItem.getHigh();
-        String low = holder.mView.getContext().getString(R.string.low) + " " + historicalItem.getLow();
+        String high = holder.mView.getContext().getString(R.string.high) + " " + String.format(Locale.getDefault(), template, Float.parseFloat(historicalItem.getHigh()));
+        String low = holder.mView.getContext().getString(R.string.low) + " " + String.format(Locale.getDefault(), template, Float.parseFloat(historicalItem.getLow()));
 
         holder.mHigh.setText(setSpan(high));
         holder.mHigh.setContentDescription(high);
