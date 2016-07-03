@@ -6,7 +6,6 @@
     <string name="symbol_search">رمز البحث</string>
     <string name="content_test">بحث عن الأوراق المالية رمز</string>
     <string name="input_hint">FB</string>
-    <string name="input_prefill"></string>
     <string name="network_toast">اه اوه! هذا التطبيق يتطلب اتصال بالإنترنت</string>
 
     <string name="set_start_time">تعيين وقت البدء</string>
@@ -21,4 +20,5 @@
     <string name="add_new_quote">أضف اقتباس من جديد</string>
     <string name="search">بحث</string>
     <string name="content_error">خطأ! لا يوجد مثل هذا العرض في قاعدة البيانات</string>
+    <string name="stock_exists">يتم حفظ هذه الأسهم بالفعل!</string>
 </resources>
